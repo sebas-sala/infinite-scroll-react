@@ -9,8 +9,10 @@
 	},
 	"keywords": [],
 	"author": "",
-	"license": "ISC",
-	"description": "",
+	"bugs": "https://github.com/sebas-sala/infinite-scroll-react/issues",
+	"homepage": "https://github.com/sebas-sala/infinite-scroll-react",
+	"license": "MIT",
+	"description": "Lightweight and easy to use react hook for infinite scroll",
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@testing-library/react": "^16.0.1",
@@ -21,5 +23,6 @@
 		"react": "^18.3.1",
 		"ts-jest": "^29.2.5",
 		"typescript": "^5.6.3"
-	}
+	},
+	"files": ["src/", "README.md", "LICENSE"]
 }
