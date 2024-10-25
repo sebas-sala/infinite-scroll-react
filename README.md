@@ -8,6 +8,12 @@ Lightweight and easy to use react hook for infinite scroll
   npm i react-continous-scroll
 ```
 
+## Warning
+
+This library uses the **Intersection Observer API** and may not be supported in older browsers. Please check browser compatibility before using this library. 
+
+For more information on the Intersection Observer API and its browser support, visit [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API).
+
 ## Usage
 
 ```javascript
