@@ -51,7 +51,7 @@ export const useInfiniteScroll = <T,>({
 }: InfiniteScrollProps<T>) => {
   const [data, setData] = useState<T[]>(initialData);
   const [page, setPage] = useState<number>(initialPage);
-  const [error, setError] = useState<Error | unknown | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const attempts = useRef<number>(0);
@@ -76,12 +76,12 @@ export const useInfiniteScroll = <T,>({
 
       setData(uniqueData);
       setPage((prevPage) => prevPage + 1);
-    } catch (error: unknown) {
+    } catch (error) {
       if (attempts.current >= maxAttempts && onMaxAttemptsReached) {
         onMaxAttemptsReached();
       }
 
-      setError(error);
+      setError(error as Error);
       setData((prevData) => [...prevData, ...fallbackData]);
     } finally {
       setLoading(false);
