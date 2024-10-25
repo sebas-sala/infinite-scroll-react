@@ -9,15 +9,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // }
 
 interface InfiniteScrollProps<T> {
-  initialData: T[];
-  initialPage: number;
-  hasNextPage: boolean;
-  maxAttempts: number;
-  threshold: number;
-  fallbackData: T[];
-  fetchMore: ({ page }: { page: number }) => Promise<{ data: T[] }>;
-  onMaxAttemptsReached?: () => void;
+  loadMore: boolean;
+  onLoadMore: ({ page }: { page: number }) => Promise<T[]>;
   idKey?: string;
+  initialData?: T[];
+  threshold?: number;
+  fallbackData?: T[];
+  initialPage?: number;
+  maxAttempts?: number;
+  onMaxAttemptsReached?: () => void;
 }
 
 function uniqueByObjectKey<T>(arr: T[], idKey: string) {
@@ -42,11 +42,11 @@ export const useInfiniteScroll = <T,>({
   idKey,
   initialData = [],
   initialPage = 1,
-  fetchMore,
-  fallbackData,
-  hasNextPage,
+  fallbackData = [],
+  loadMore,
   threshold = 0.5,
   maxAttempts = 3,
+  onLoadMore,
   onMaxAttemptsReached,
 }: InfiniteScrollProps<T>) => {
   const [data, setData] = useState<T[]>(initialData);
@@ -58,14 +58,13 @@ export const useInfiniteScroll = <T,>({
   const observer = useRef<IntersectionObserver | null>(null);
 
   const loadMoreData = useCallback(async () => {
-    if (loading || attempts.current >= maxAttempts || !hasNextPage) return;
+    if (loading || attempts.current >= maxAttempts || !loadMore) return;
 
     setLoading(true);
     attempts.current += 1;
 
     try {
-      const res = await fetchMore({ page });
-      const { data: newData } = res;
+      const newData = await onLoadMore({ page });
 
       let uniqueData: T[];
 
@@ -88,9 +87,9 @@ export const useInfiniteScroll = <T,>({
       setLoading(false);
     }
   }, [
-    fetchMore,
+    loadMore,
     page,
-    hasNextPage,
+    onLoadMore,
     loading,
     maxAttempts,
     onMaxAttemptsReached,
@@ -100,8 +99,7 @@ export const useInfiniteScroll = <T,>({
   ]);
 
   useEffect(() => {
-    console.log(hasNextPage, loading, loadMoreRef.current);
-    if (!hasNextPage || loading || !loadMoreRef.current) return;
+    if (!loadMore || loading || !loadMoreRef.current) return;
 
     if (observer.current) observer.current.disconnect();
 
@@ -124,14 +122,14 @@ export const useInfiniteScroll = <T,>({
         observer.current.unobserve(currentRef);
       }
     };
-  }, [loadMoreData, threshold, hasNextPage, loading]);
+  }, [loadMoreData, threshold, loadMore, loading]);
 
   return {
     page,
     data,
     error,
     loading,
+    loadMore,
     loadMoreRef,
-    hasNextPage,
   };
 };
