@@ -2,6 +2,7 @@
 	"name": "react-continous-scroll",
 	"version": "1.1.8",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"scripts": {
 		"test": "jest",
 		"lint": "npx @biomejs/biome lint --write",
@@ -27,9 +28,5 @@
 	"peerDependencies": {
 		"react": "^18.3.1"
 	},
-	"files": [
-		"dist/",
-		"README.md",
-		"LICENSE"
-	]
+	"files": ["dist/", "README.md", "LICENSE"]
 }
