@@ -10,6 +10,8 @@ interface InfiniteScrollProps<T> {
 	initialPage?: number;
 	maxAttempts?: number;
 	timeout?: number;
+	maxPage?: number;
+	onMaxPageReached?: () => void;
 	onMaxAttemptsReached?: () => void;
 }
 
@@ -39,6 +41,8 @@ export const useInfiniteScroll = <T>({
 	loadMore,
 	threshold = 0.5,
 	maxAttempts = 3,
+	maxPage,
+	onMaxPageReached,
 	onLoadMore,
 	timeout = 0,
 	onMaxAttemptsReached,
@@ -57,6 +61,7 @@ export const useInfiniteScroll = <T>({
 		if (!loadMore) return;
 		if (page === lastPage.current) return;
 		if (attempts.current >= maxAttempts) return;
+		if (maxPage && page > maxPage) return;
 
 		setLoading(true);
 		attempts.current += 1;
@@ -77,6 +82,12 @@ export const useInfiniteScroll = <T>({
 			setPage((prevPage) => prevPage + 1);
 
 			attempts.current = 0;
+
+			if (maxPage && page > maxPage) {
+				if (onMaxPageReached) {
+					onMaxPageReached();
+				}
+			}
 		} catch (error) {
 			if (attempts.current >= maxAttempts && onMaxAttemptsReached) {
 				onMaxAttemptsReached();
@@ -102,10 +113,20 @@ export const useInfiniteScroll = <T>({
 		data,
 		idKey,
 		timeout,
+		maxPage,
+		onMaxPageReached,
 	]);
 
 	useEffect(() => {
-		if (!loadMore || loading || !loadMoreRef.current) return;
+		if (
+			!loadMore ||
+			loading ||
+			!loadMoreRef.current ||
+			page === lastPage.current ||
+			attempts.current >= maxAttempts ||
+			(maxPage && page > maxPage)
+		)
+			return;
 
 		const observerCallback: IntersectionObserverCallback = (entries) => {
 			if (entries[0].isIntersecting) {
@@ -124,7 +145,7 @@ export const useInfiniteScroll = <T>({
 				observer.current.unobserve(currentRef);
 			}
 		};
-	}, [loadMoreData, threshold, loadMore, loading]);
+	}, [loadMoreData, threshold, loadMore, loading, page, maxAttempts, maxPage]);
 
 	return {
 		page,
