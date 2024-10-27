@@ -26,7 +26,7 @@ function uniqueByObjectKey<T>(arr: T[], idKey: string) {
 	return arr.filter((item) => {
 		const key = item[idKey as keyof T];
 		if (!key || seen.has(key)) return false;
-		seen.add(idKey);
+		seen.add(key);
 		return true;
 	});
 }
@@ -85,11 +85,11 @@ export const useInfiniteScroll = <T>({
 			setError(error as Error);
 			setData((prevData) => [...prevData, ...fallbackData]);
 		} finally {
-			setLoading(false);
-
-			if (timeout > 0) {
+			if (timeout > 0 && attempts.current < maxAttempts) {
 				await new Promise((resolve) => setTimeout(resolve, timeout));
 			}
+
+			setLoading(false);
 		}
 	}, [
 		loadMore,
