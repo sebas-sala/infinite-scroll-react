@@ -9,6 +9,7 @@ interface InfiniteScrollProps<T> {
 	fallbackData?: T[];
 	initialPage?: number;
 	maxAttempts?: number;
+	timeout?: number;
 	onMaxAttemptsReached?: () => void;
 }
 
@@ -39,6 +40,7 @@ export const useInfiniteScroll = <T>({
 	threshold = 0.5,
 	maxAttempts = 3,
 	onLoadMore,
+	timeout = 0,
 	onMaxAttemptsReached,
 }: InfiniteScrollProps<T>) => {
 	const [data, setData] = useState<T[]>(initialData);
@@ -48,9 +50,13 @@ export const useInfiniteScroll = <T>({
 	const loadMoreRef = useRef<HTMLDivElement | null>(null);
 	const attempts = useRef<number>(0);
 	const observer = useRef<IntersectionObserver | null>(null);
+	const lastPage = useRef<number>(initialPage - 1);
 
 	const loadMoreData = useCallback(async () => {
-		if (loading || attempts.current >= maxAttempts || !loadMore) return;
+		if (loading) return;
+		if (!loadMore) return;
+		if (page === lastPage.current) return;
+		if (attempts.current >= maxAttempts) return;
 
 		setLoading(true);
 		attempts.current += 1;
@@ -67,7 +73,10 @@ export const useInfiniteScroll = <T>({
 			}
 
 			setData(uniqueData);
+			lastPage.current = page;
 			setPage((prevPage) => prevPage + 1);
+
+			attempts.current = 0;
 		} catch (error) {
 			if (attempts.current >= maxAttempts && onMaxAttemptsReached) {
 				onMaxAttemptsReached();
@@ -77,6 +86,10 @@ export const useInfiniteScroll = <T>({
 			setData((prevData) => [...prevData, ...fallbackData]);
 		} finally {
 			setLoading(false);
+
+			if (timeout > 0) {
+				await new Promise((resolve) => setTimeout(resolve, timeout));
+			}
 		}
 	}, [
 		loadMore,
@@ -88,26 +101,23 @@ export const useInfiniteScroll = <T>({
 		fallbackData,
 		data,
 		idKey,
+		timeout,
 	]);
 
 	useEffect(() => {
 		if (!loadMore || loading || !loadMoreRef.current) return;
 
-		if (observer.current) observer.current.disconnect();
-
-		observer.current = new IntersectionObserver(
-			(entries) => {
-				if (entries[0].isIntersecting) {
-					loadMoreData();
-				}
-			},
-			{ threshold: threshold },
-		);
+		const observerCallback: IntersectionObserverCallback = (entries) => {
+			if (entries[0].isIntersecting) {
+				loadMoreData();
+			}
+		};
 
 		const currentRef = loadMoreRef.current;
-		if (currentRef) {
-			observer.current.observe(currentRef);
-		}
+		observer.current = new IntersectionObserver(observerCallback, {
+			threshold,
+		});
+		observer.current.observe(currentRef);
 
 		return () => {
 			if (observer.current && currentRef) {
