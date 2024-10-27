@@ -1,4 +1,4 @@
-import { useInfiniteScroll } from "../src/use-infinite-scroll";
+import { useInfiniteScroll } from "../src/index";
 import { renderHook, act, waitFor } from "@testing-library/react";
 
 describe("useInfineScroll", () => {
@@ -70,6 +70,72 @@ describe("useInfineScroll", () => {
 
 		expect(result.current.data).toEqual([{ id: "1", name: "Item 1" }]);
 		expect(result.current.page).toBe(1);
+	});
+
+	it('should wait the timeout before fetching more data when "timeout" is provided', async () => {
+		const { result, rerender } = renderHook(() =>
+			useInfiniteScroll({
+				initialData: [],
+				initialPage: 1,
+				onLoadMore: fetchMoreMock,
+				fallbackData: [],
+				loadMore: true,
+				threshold: 0.5,
+				maxAttempts: 3,
+				timeout: 1000,
+			}),
+		);
+
+		act(() => {
+			result.current.loadMoreRef.current = document.createElement("div");
+		});
+
+		rerender();
+
+		await waitFor(() => {
+			expect(fetchMoreMock).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	it("should return data from 10 pages", async () => {
+		let currentPage = 1;
+
+		const onLoadMore = (
+			page: number,
+		): Promise<{ id: number; name: string }[]> => {
+			return new Promise((resolve) => {
+				currentPage += 1;
+				resolve(
+					Array.from({ length: 10 }, (_, index) => ({
+						id: index + 1 + 10 * (page - 1),
+						name: `Item ${index + 1 + 10 * (page - 1)}`,
+					})),
+				);
+			});
+		};
+
+		const { result, rerender } = renderHook(() =>
+			useInfiniteScroll({
+				initialData: [],
+				initialPage: 1,
+				onLoadMore: onLoadMore,
+				fallbackData: [],
+				loadMore: currentPage <= 10,
+				threshold: 0.5,
+				maxAttempts: 3,
+			}),
+		);
+
+		act(() => {
+			result.current.loadMoreRef.current = document.createElement("div");
+		});
+
+		rerender();
+
+		await waitFor(() => {
+			expect(result.current.data).toHaveLength(100);
+			expect(result.current.page).toBe(11);
+		});
 	});
 
 	it('should remove duplicates when "idKey" is provided', () => {
