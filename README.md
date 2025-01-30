@@ -15,7 +15,7 @@ This library uses the **Intersection Observer API** and may not be supported in 
 For more information on the Intersection Observer API and its browser support, visit [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API).
 
 
-You may want to encapsulate each infinite scroll within its own component. Having two within the same component may cause issues.
+`You may want to encapsulate each infinite scroll within its own component. Having two within the same component may cause issues.`
 
 ## Usage
 
